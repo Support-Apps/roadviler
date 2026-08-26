@@ -213,6 +213,25 @@ header h1{font-size:24px;font-weight:700;color:var(--ink);letter-spacing:0.5px;f
 .result-sub.badge-start{color:#1a6b3a;font-weight:700}
 .result-sub.badge-end{color:var(--beige3);font-weight:700}
 .connector-line{width:1px;height:12px;background:var(--border);margin:0 0 0 calc(10px + 11px)}
+
+/* ── AUDIO PLAYER ── */
+#audio-section{margin-top:20px;padding:16px;background:var(--cream);border:1px solid var(--border);display:none}
+#audio-section.visible{display:block}
+.audio-header{font-size:12px;font-weight:600;color:var(--ink2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
+.audio-current{background:var(--white);padding:12px;border-left:3px solid var(--beige);margin-bottom:12px;border-radius:2px}
+.audio-current-label{font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
+.audio-current-text{font-size:14px;font-weight:600;color:var(--beige3)}
+.audio-controls{display:flex;gap:8px;margin-bottom:12px}
+.btn-audio{flex:1;padding:10px;border:1px solid var(--beige3);background:var(--white);color:var(--beige3);font-size:12px;font-weight:600;cursor:pointer;border-radius:3px;font-family:'Rubik',sans-serif;transition:background 0.15s,color 0.15s}
+.btn-audio:hover{background:var(--beige3);color:var(--white)}
+.audio-settings{border-top:1px solid var(--border);padding-top:12px}
+.audio-setting-group{margin-bottom:10px}
+.audio-setting-label{font-size:11px;color:var(--ink3);margin-bottom:4px;display:flex;justify-content:space-between}
+.audio-setting-value{font-weight:600;color:var(--beige3)}
+.audio-control-input{display:flex;align-items:center;gap:8px}
+.audio-control-input input[type="range"]{flex:1;height:4px;background:var(--border);outline:none;-webkit-appearance:none;appearance:none}
+.audio-control-input input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--beige3);cursor:pointer}
+.audio-control-input input[type="range"]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--beige3);cursor:pointer;border:none}
 .summary-box{
   background:var(--cream);border:1px solid var(--border);
   border-radius:10px;padding:12px 14px;margin-bottom:12px;
@@ -226,6 +245,24 @@ header h1{font-size:24px;font-weight:700;color:var(--ink);letter-spacing:0.5px;f
   margin-top:12px;transition:background 0.15s;font-weight:600;
 }
 .btn-clipboard:hover{background:var(--cream)}
+.save-bar{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.btn-save{
+  flex:1;min-width:100px;background:var(--beige);color:var(--white);
+  border:1px solid rgba(42,36,32,0.35);border-radius:0;
+  padding:9px 10px;font-size:12px;font-weight:700;
+  cursor:pointer;font-family:'Rubik',sans-serif;
+  transition:background 0.15s;display:flex;align-items:center;justify-content:center;gap:5px;
+}
+.btn-save:hover{background:var(--beige2)}
+.btn-load{
+  flex:1;min-width:100px;background:var(--cream2);color:var(--ink2);
+  border:1px solid rgba(42,36,32,0.35);border-radius:0;
+  padding:9px 10px;font-size:12px;font-weight:700;
+  cursor:pointer;font-family:'Rubik',sans-serif;
+  transition:background 0.15s;display:flex;align-items:center;justify-content:center;gap:5px;
+}
+.btn-load:hover{background:var(--cream)}
+.saved-indicator{font-size:10px;color:var(--beige3);text-align:center;margin-top:5px;letter-spacing:0.3px;min-height:14px}
 
 /* ── MAP CANVAS ── */
 .map-panel{
@@ -433,12 +470,48 @@ header h1{font-size:24px;font-weight:700;color:var(--ink);letter-spacing:0.5px;f
       </div>
     </div>
 
+    <!-- Save / Load -->
+    <div>
+      <div class="section-label">שמירה מקומית</div>
+      <div class="save-bar">
+        <button class="btn-save" onclick="saveToLocal()">💾 שמור מסלול</button>
+        <button class="btn-load" onclick="loadFromLocal()">📂 טען שמור</button>
+      </div>
+      <div class="saved-indicator" id="saved-indicator"></div>
+    </div>
+
     <!-- Result -->
     <div id="result-section">
       <div class="section-label">מסלול אופטימלי</div>
       <div class="summary-box" id="summary-box" style="display:none"></div>
       <div class="result-list" id="result-list"></div>
       <button class="btn-clipboard" onclick="copyToClipboard()">📋 העתק לטקסט</button>
+      <div id="audio-section">
+        <div class="audio-header">🔊 הקראה קולית</div>
+        <div class="audio-current">
+          <div class="audio-current-label">כתובת מוקראת כעת:</div>
+          <div class="audio-current-text" id="audio-current-text">לחץ על "הקרא" להתחלה</div>
+        </div>
+        <div class="audio-controls">
+          <button class="btn-audio" id="btn-play-audio">▶ הקרא</button>
+          <button class="btn-audio" id="btn-pause-audio">⏸ השהה</button>
+          <button class="btn-audio" id="btn-stop-audio">⏹ עצור</button>
+        </div>
+        <div class="audio-settings">
+          <div class="audio-setting-group">
+            <div class="audio-setting-label">קצב הקראה <span class="audio-setting-value" id="rate-value">1.0x</span></div>
+            <div class="audio-control-input"><input type="range" id="rate-slider" min="0.5" max="2" step="0.1" value="1"></div>
+          </div>
+          <div class="audio-setting-group">
+            <div class="audio-setting-label">גובה קול <span class="audio-setting-value" id="pitch-value">1.0</span></div>
+            <div class="audio-control-input"><input type="range" id="pitch-slider" min="0.5" max="2" step="0.1" value="1"></div>
+          </div>
+          <div class="audio-setting-group">
+            <div class="audio-setting-label">עוצמת קול <span class="audio-setting-value" id="volume-value">100%</span></div>
+            <div class="audio-control-input"><input type="range" id="volume-slider" min="0" max="1" step="0.1" value="1"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
   </aside>
@@ -714,6 +787,11 @@ function showResult(addrs,totalKm){
     item.innerHTML=`<span class="result-num ${numClass}">${i+1}</span><div><div class="result-text">${addr}</div>${subLabel}</div>`;
     list.appendChild(item);
   });
+  
+  allAddresses=addrs;
+  currentAddressIndex=0;
+  document.getElementById('audio-section').classList.add('visible');
+  stopSpeaking();
 }
 
 function showManual(){
@@ -747,8 +825,152 @@ function shareWhatsapp(){const a=getAddresses();if(!a.length){showToast('הכנ�
 function copyToClipboard(){const a=getAddresses();if(!a.length)return;navigator.clipboard.writeText(a.map((x,i)=>`${i+1}. ${x}`).join('\n')).then(()=>showToast('הועתק ✓'))}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800)}
 
+// ── AUDIO / TEXT-TO-SPEECH ──
+let currentAddressIndex=0;
+let allAddresses=[];
+let isSpeaking=false;
+let isPaused=false;
+let speechRate=1;
+let speechPitch=1;
+let speechVolume=1;
+
+function initAudioControls(){
+  const playBtn=document.getElementById('btn-play-audio');
+  const pauseBtn=document.getElementById('btn-pause-audio');
+  const stopBtn=document.getElementById('btn-stop-audio');
+  const rateSlider=document.getElementById('rate-slider');
+  const pitchSlider=document.getElementById('pitch-slider');
+  const volumeSlider=document.getElementById('volume-slider');
+
+  playBtn.addEventListener('click',startSpeaking);
+  pauseBtn.addEventListener('click',pauseSpeaking);
+  stopBtn.addEventListener('click',stopSpeaking);
+  
+  rateSlider.addEventListener('change',e=>{
+    speechRate=parseFloat(e.target.value);
+    document.getElementById('rate-value').textContent=speechRate.toFixed(1)+'x';
+  });
+  
+  pitchSlider.addEventListener('change',e=>{
+    speechPitch=parseFloat(e.target.value);
+    document.getElementById('pitch-value').textContent=speechPitch.toFixed(1);
+  });
+  
+  volumeSlider.addEventListener('change',e=>{
+    speechVolume=parseFloat(e.target.value);
+    document.getElementById('volume-value').textContent=Math.round(speechVolume*100)+'%';
+  });
+}
+
+function startSpeaking(){
+  if(allAddresses.length===0){showToast('אין כתובות להקראה');return}
+  isPaused=false;
+  
+  if(isSpeaking){
+    window.speechSynthesis.resume();
+    return;
+  }
+  
+  readNextAddress();
+}
+
+function pauseSpeaking(){
+  if(!isSpeaking)return;
+  window.speechSynthesis.pause();
+  isPaused=true;
+}
+
+function stopSpeaking(){
+  window.speechSynthesis.cancel();
+  isSpeaking=false;
+  isPaused=false;
+  currentAddressIndex=0;
+  document.getElementById('audio-current-text').textContent='לחץ על "הקרא" להתחלה';
+}
+
+function readNextAddress(){
+  if(currentAddressIndex>=allAddresses.length){
+    stopSpeaking();
+    showToast('הקראת כל הכתובות הושלמה ✓');
+    return;
+  }
+  
+  const address=allAddresses[currentAddressIndex];
+  document.getElementById('audio-current-text').textContent=`${currentAddressIndex+1}. ${address}`;
+  
+  const utterance=new SpeechSynthesisUtterance(address);
+  utterance.lang='he-IL';
+  utterance.rate=speechRate;
+  utterance.pitch=speechPitch;
+  utterance.volume=speechVolume;
+  
+  utterance.onend=()=>{
+    if(!isPaused){
+      currentAddressIndex++;
+      setTimeout(readNextAddress,500);
+    }
+    isSpeaking=false;
+  };
+  
+  utterance.onerror=()=>{
+    isSpeaking=false;
+  };
+  
+  isSpeaking=true;
+  window.speechSynthesis.speak(utterance);
+}
+
+// ── LOCAL STORAGE SAVE / LOAD ──
+function saveToLocal(){
+  const addresses = getAddresses();
+  if(!addresses.length){showToast('אין כתובות לשמירה');return}
+  const driverAddr = document.getElementById('driver-input').value.trim();
+  const driverMode = document.querySelector('input[name="driver-mode"]:checked').value;
+  const data = {addresses, driverAddr, driverMode, savedAt: new Date().toLocaleString('he-IL')};
+  localStorage.setItem('roadviler_saved', JSON.stringify(data));
+  const ind = document.getElementById('saved-indicator');
+  ind.textContent = '✓ נשמר בהצלחה · ' + data.savedAt;
+  showToast('המסלול נשמר ✓');
+}
+
+function loadFromLocal(){
+  const raw = localStorage.getItem('roadviler_saved');
+  if(!raw){showToast('אין מסלול שמור');return}
+  try{
+    const data = JSON.parse(raw);
+    // Clear existing rows
+    const list = document.getElementById('address-list');
+    list.innerHTML = '';
+    // Load addresses
+    (data.addresses||[]).forEach(a => addRow(a));
+    // Load driver
+    if(data.driverAddr) document.getElementById('driver-input').value = data.driverAddr;
+    // Load mode
+    if(data.driverMode){
+      const radio = document.querySelector(`input[name="driver-mode"][value="${data.driverMode}"]`);
+      if(radio) radio.checked = true;
+    }
+    const ind = document.getElementById('saved-indicator');
+    ind.textContent = 'נטען · נשמר ב: ' + (data.savedAt||'');
+    showToast('המסלול נטען ✓');
+  } catch(e){showToast('שגיאה בטעינת הנתונים')}
+}
+
+// Auto-load on startup if saved data exists
+window.addEventListener('DOMContentLoaded', function(){
+  const raw = localStorage.getItem('roadviler_saved');
+  if(raw){
+    try{
+      const data = JSON.parse(raw);
+      const ind = document.getElementById('saved-indicator');
+      ind.textContent = 'יש מסלול שמור · ' + (data.savedAt||'');
+    } catch(e){}
+  }
+});
+
 // Init
 addRow();addRow();addRow();
+initAudioControls();
 </script>
 </body>
 </html>
