@@ -125,6 +125,25 @@ header h1{font-size:24px;font-weight:700;color:var(--ink);letter-spacing:0.5px;f
 .btn-add:hover{background:var(--cream)}
 .tip{font-size:10px;color:var(--ink3);margin-top:12px;text-align:center;letter-spacing:0.3px}
 
+.anchor-input{
+  width:100%;
+  background:var(--cream);
+  border:1px solid var(--border);
+  border-radius:0;
+  padding:12px 14px;
+  font-size:13px;
+  color:var(--ink);
+  font-family:'Rubik',sans-serif;
+  direction:rtl;
+  margin-bottom:10px;
+  outline:none;
+}
+.anchor-input::placeholder{color:var(--ink3)}
+.anchor-input:focus{border-color:var(--beige)}
+.mode-toggle{display:flex;gap:16px;margin-bottom:10px;padding:0 2px}
+.mode-option{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2);font-family:'Rubik',sans-serif;cursor:pointer;direction:rtl}
+.mode-option input{accent-color:var(--beige3);cursor:pointer}
+
 /* ── BUTTONS ── */
 .btn-geo{
   width:100%;
@@ -366,6 +385,17 @@ header h1{font-size:24px;font-weight:700;color:var(--ink);letter-spacing:0.5px;f
       <button class="btn-add" onclick="addRow()">+ הוסף כתובת</button>
     </div>
 
+    <!-- Anchor point: driver location, with entrance/exit mode -->
+    <div>
+      <div class="section-label">נקודת עוגן (אופציונלי)</div>
+      <input type="text" id="driver-input" class="anchor-input" placeholder="כתובת הנהג / מיקום נוכחי"/>
+      <div class="mode-toggle">
+        <label class="mode-option"><input type="radio" name="driver-mode" value="start" checked> נכנס לעיר</label>
+        <label class="mode-option"><input type="radio" name="driver-mode" value="end"> יוצא מהעיר</label>
+      </div>
+      <div class="tip">"נכנס לעיר" — המסלול יתחיל בכתובת הקרובה ביותר לנהג. "יוצא מהעיר" — המסלול יסתיים בכתובת הקרובה ביותר לנהג</div>
+    </div>
+
     <!-- Actions -->
     <div>
       <div class="section-label">פעולות</div>
@@ -567,10 +597,60 @@ function bestRoute(pts){
   return{order:bestOrder,totalKm:bestDist};
 }
 
+// ── ANCHOR-AWARE ROUTING (city entrance / exit) ──
+// Open-path 2-opt that never moves the first stop, and (optionally) never moves the last stop.
+function twoOptOpen(order,pts,fixEnd){
+  let best=[...order];
+  const n=best.length;
+  let improved=true;
+  while(improved){improved=false;
+    for(let i=0;i<n-1;i++){
+      const jMax=fixEnd?n-2:n-1;
+      for(let j=i+2;j<=jMax;j++){
+        const a=pts[best[i]],b=pts[best[i+1]],c=pts[best[j]];
+        const hasNext=j+1<n;
+        const d=hasNext?pts[best[j+1]]:null;
+        const oldCost=haversine(a,b)+(hasNext?haversine(c,d):0);
+        const newCost=haversine(a,c)+(hasNext?haversine(b,d):0);
+        if(newCost<oldCost-0.001){
+          const seg=best.slice(i+1,j+1).reverse();
+          best=[...best.slice(0,i+1),...seg,...best.slice(j+1)];
+          improved=true;
+        }
+      }
+    }
+  }
+  return best;
+}
+// Index of the pts entry closest to a given anchor coordinate.
+function nearestPtIndex(pts,anchor){
+  let best=-1,bestD=Infinity;
+  for(let i=0;i<pts.length;i++){
+    const d=haversine(pts[i],anchor);
+    if(d<bestD){bestD=d;best=i}
+  }
+  return best;
+}
+// Build a route with the driver's nearest stop forced to the start ("נכנס לעיר") or the end ("יוצא מהעיר").
+function bestRouteAnchored(pts,driverPt,mode){
+  const idx=nearestPtIndex(pts,driverPt);
+  let order;
+  if(mode==='end'){
+    order=nearestNeighborFrom(idx,pts).reverse();
+    order=twoOptOpen(order,pts,true);
+  }else{
+    order=nearestNeighborFrom(idx,pts);
+    order=twoOptOpen(order,pts,false);
+  }
+  return{order,totalKm:routeLength(order,pts)};
+}
+
 // ── MAIN SORT ──
 async function sortGeo(){
   const addrs=getAddresses();
   if(addrs.length<2){showToast('הכנס לפחות שתי כתובות');return}
+  const driverAddr=document.getElementById('driver-input').value.trim();
+  const driverMode=document.querySelector('input[name="driver-mode"]:checked').value;
   const geoBtn=document.querySelector('.btn-geo');
   geoBtn.disabled=true;
   setStatus(`מאתר כתובות... (0/${addrs.length})`,true);
@@ -583,10 +663,17 @@ async function sortGeo(){
       showToast(`לא נמצאה כתובת: "${addrs[i]}"`);return;
     }
     pts.push({...p,original:addrs[i]});
-    if(i<addrs.length-1)await new Promise(r=>setTimeout(r,1150));
+    await new Promise(r=>setTimeout(r,1150));
+  }
+  let driverPt=null;
+  if(driverAddr){
+    setStatus('מאתר כתובת הנהג...',true);
+    driverPt=await geocode(driverAddr);
+    if(!driverPt){setStatus('',false);geoBtn.disabled=false;showToast(`לא נמצאה כתובת הנהג: "${driverAddr}"`);return}
+    await new Promise(r=>setTimeout(r,1150));
   }
   setStatus('מחשב מסלול...',true);
-  const{order,totalKm}=bestRoute(pts);
+  const{order,totalKm}=driverPt?bestRouteAnchored(pts,driverPt,driverMode):bestRoute(pts);
   const sortedPts=order.map(i=>pts[i]);
   const sorted=sortedPts.map(p=>p.original);
   const list=document.getElementById('address-list');
