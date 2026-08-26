@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roadviler</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Playfair+Display:wght@400;600;700&family=Rubik:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --cream:#f7f3ee;
+  --cream2:#ede8e0;
+  --beige:#c9b99a;
+  --beige2:#b5a48a;
+  --beige3:#9a8870;
+  --ink:#2a2420;
+  --ink2:#5a4f4a;
+  --ink3:#8a7f7a;
+  --white:#ffffff;
+  --border:#ddd6cc;
+  --map-bg:#eee8df;
+}
+
+body{
+  background:var(--white);
+  font-family:'Rubik',sans-serif;
+  color:var(--ink);
+  min-height:100vh;
+  direction:rtl;
+}
+
+/* ── HEADER ── */
+header{
+  background:var(--white);
+  border-bottom:1px solid var(--border);
+  padding:22px 32px 18px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.header-brand{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.mag-label{font-size:9px;letter-spacing:4px;color:var(--ink3);text-transform:uppercase;font-family:'Cinzel',serif;font-weight:400}
+header h1{font-size:24px;font-weight:700;color:var(--ink);letter-spacing:0.5px;font-family:'Rubik',sans-serif}
+.bsd{font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;color:var(--ink3);font-weight:400}
+.header-divider{width:1px;height:36px;background:var(--border)}
+.header-sub{font-size:11px;color:var(--ink3);letter-spacing:0.5px;text-align:left;line-height:1.6;font-family:'Rubik',sans-serif}
+
+/* ── LAYOUT ── */
+.app-layout{display:flex;min-height:calc(100vh - 80px)}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:360px;
+  min-width:320px;
+  background:var(--white);
+  border-left:1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  padding:44px 36px;
+  gap:44px;
+  overflow-y:auto;
+}
+
+.section-label{
+  font-size:9px;
+  letter-spacing:2.5px;
+  color:var(--ink3);
+  text-transform:uppercase;
+  font-weight:600;
+  margin-bottom:22px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-family:'Rubik',sans-serif;
+}
+.section-label::after{content:'';flex:1;height:0.5px;background:var(--border)}
+
+/* ── ADDRESS LIST ── */
+#address-list{display:flex;flex-direction:column;gap:12px;margin-bottom:20px}
+.address-row{
+  display:flex;align-items:center;gap:10px;
+  background:var(--cream);
+  border:1px solid var(--border);
+  border-radius:0;
+  padding:14px 16px;
+  cursor:grab;
+  transition:border-color 0.15s,background 0.15s;
+  user-select:none;
+}
+.address-row:active{cursor:grabbing}
+.address-row.dragging{opacity:0.45}
+.address-row.drag-over{border-color:var(--beige);background:var(--cream2)}
+.row-num{
+  background:var(--beige);
+  color:var(--white);
+  font-size:11px;
+  font-weight:700;
+  min-width:22px;height:22px;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  font-family:'Rubik',sans-serif;
+}
+.address-input{
+  flex:1;background:transparent;border:none;outline:none;
+  color:var(--ink);font-size:13px;direction:rtl;
+  font-family:'Rubik',sans-serif;
+}
+.address-input::placeholder{color:var(--ink3)}
+.drag-handle{color:var(--border);font-size:15px;cursor:grab;flex-shrink:0}
+.btn-remove{
+  background:none;border:none;color:var(--ink3);font-size:14px;
+  cursor:pointer;flex-shrink:0;transition:color 0.15s;line-height:1;padding:2px 4px;
+}
+.btn-remove:hover{color:var(--beige3)}
+
+.btn-add{
+  width:100%;background:transparent;
+  border:2px solid rgba(42,36,32,0.35);
+  border-radius:0;
+  cursor:pointer;transition:background 0.15s;
+  font-family:'Rubik',sans-serif;
+  direction:rtl;letter-spacing:0.3px;font-weight:600;
+}
+.btn-add:hover{background:var(--cream)}
+.tip{font-size:10px;color:var(--ink3);margin-top:12px;text-align:center;letter-spacing:0.3px}
+
+/* ── BUTTONS ── */
+.btn-geo{
+  width:100%;
+  background:var(--beige);
+  color:var(--white);
+  border:1px solid rgba(42,36,32,0.35);
+  border-radius:0;
+  padding:15px 10px;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+  font-family:'Rubik',sans-serif;
+  transition:background 0.15s,transform 0.1s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  letter-spacing:0.5px;
+}
+.btn-geo:hover{background:var(--beige2)}
+.btn-geo:active{transform:scale(0.97)}
+.btn-geo:disabled{opacity:0.55;cursor:not-allowed}
+
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.btn-action{
+  flex:1;min-width:110px;
+  padding:15px 10px;
+  border:1px solid rgba(42,36,32,0.35);
+  border-radius:0;
+  font-size:13px;font-weight:600;
+  cursor:pointer;
+  font-family:'Rubik',sans-serif;
+  transition:opacity 0.15s,transform 0.1s,background 0.15s;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  background:var(--cream2);color:var(--ink2);
+}
+.btn-action:hover{background:var(--cream);opacity:0.9}
+.btn-action:active{transform:scale(0.97)}
+
+#status-bar{
+  display:none;align-items:center;gap:8px;
+  background:var(--cream);border:1px solid var(--border);
+  border-radius:8px;padding:10px 14px;margin-top:10px;
+  font-size:12px;color:var(--ink2);
+}
+#status-bar.visible{display:flex}
+.spinner{
+  width:13px;height:13px;
+  border:2px solid var(--border);
+  border-top-color:var(--beige);
+  border-radius:50%;
+  animation:spin 0.7s linear infinite;flex-shrink:0;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── RESULT LIST ── */
+.result-list{display:flex;flex-direction:column}
+.result-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border)}
+.result-item:last-child{border-bottom:none}
+.result-num{
+  min-width:22px;height:22px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-top:2px;font-size:11px;font-weight:700;
+}
+.num-start{background:#d4ead9;color:#1a6b3a}
+.num-end{background:var(--cream2);color:var(--beige3)}
+.num-mid{background:var(--beige);color:var(--white)}
+.result-text{font-size:13px;color:var(--ink);line-height:1.5}
+.result-sub{font-size:10px;color:var(--ink3);margin-top:2px}
+.result-sub.badge-start{color:#1a6b3a;font-weight:700}
+.result-sub.badge-end{color:var(--beige3);font-weight:700}
+.connector-line{width:1px;height:12px;background:var(--border);margin:0 0 0 calc(10px + 11px)}
+.summary-box{
+  background:var(--cream);border:1px solid var(--border);
+  border-radius:10px;padding:12px 14px;margin-bottom:12px;
+  font-size:12px;color:var(--ink2);line-height:1.9;
+}
+.summary-box strong{color:var(--ink);font-weight:700}
+.btn-clipboard{
+  background:var(--cream2);border:1px solid rgba(42,36,32,0.35);
+  color:var(--ink2);border-radius:0;padding:8px 14px;
+  font-size:12px;cursor:pointer;font-family:'Rubik',sans-serif;
+  margin-top:12px;transition:background 0.15s;font-weight:600;
+}
+.btn-clipboard:hover{background:var(--cream)}
+
+/* ── MAP CANVAS ── */
+.map-panel{
+  flex:1;
+  background:var(--map-bg);
+  position:relative;
+  display:flex;
+  flex-direction:column;
+}
+.map-header{
+  padding:18px 24px 14px;
+  border-bottom:1px solid var(--border);
+  background:var(--white);
+  display:flex;align-items:center;gap:12px;
+}
+.map-header-label{
+  font-size:9px;letter-spacing:3px;color:var(--ink3);
+  text-transform:uppercase;font-family:'Rubik',sans-serif;
+}
+.map-header-title{font-size:15px;font-weight:700;color:var(--ink);font-family:'Rubik',sans-serif}
+.map-container{flex:1;position:relative}
+#map{width:100%;height:100%;min-height:500px}
+
+.map-placeholder{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:14px;
+  color:var(--ink3);
+}
+.map-placeholder-icon{font-size:48px;opacity:0.3}
+.map-placeholder-text{font-size:13px;letter-spacing:0.5px;font-family:'Rubik',sans-serif}
+
+/* ── TOAST ── */
+#toast{
+  position:fixed;bottom:24px;left:50%;
+  transform:translateX(-50%) translateY(80px);
+  background:var(--beige);color:var(--white);
+  padding:11px 22px;border-radius:8px;
+  font-size:13px;font-weight:700;
+  transition:transform 0.3s;z-index:999;pointer-events:none;
+  font-family:'Rubik',sans-serif;
+}
+#toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ── RESULT SECTION ── */
+#result-section{display:none}
+
+/* ── INTRO OVERLAY ── */
+#intro-overlay{
+  position:fixed;inset:0;
+  background:var(--white);
+  z-index:100;
+  display:flex;align-items:center;justify-content:center;
+  padding:32px;
+}
+.intro-box{
+  max-width:520px;width:100%;
+  border:2px solid var(--border);
+  border-radius:0;
+  padding:48px 44px;
+  display:flex;flex-direction:column;gap:28px;
+  background:var(--white);
+}
+.intro-logo{font-family:'Cinzel',serif;font-size:10px;letter-spacing:4px;color:var(--ink3);text-transform:uppercase;text-align:center}
+.intro-title{font-family:'Rubik',sans-serif;font-size:32px;font-weight:700;color:var(--ink);text-align:center;line-height:1.3}
+.intro-divider{width:40px;height:1px;background:var(--beige);margin:0 auto}
+.intro-desc{font-size:14px;color:var(--ink2);line-height:1.9;text-align:right;font-family:'Rubik',sans-serif}
+.intro-steps{display:flex;flex-direction:column;gap:14px}
+.intro-step{display:flex;align-items:flex-start;gap:14px;text-align:right}
+.intro-step-num{
+  min-width:28px;height:28px;border-radius:50%;
+  background:var(--beige);color:var(--white);
+  font-size:12px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;font-family:'Rubik',sans-serif;
+}
+.intro-step-text{font-size:13px;color:var(--ink2);line-height:1.7;font-family:'Rubik',sans-serif;padding-top:4px}
+.intro-step-text strong{color:var(--ink);font-weight:600}
+.intro-btn{
+  background:var(--beige);color:var(--white);
+  border:2px solid rgba(42,36,32,0.35);border-radius:0;
+  padding:15px;font-size:15px;font-weight:700;
+  cursor:pointer;font-family:'Rubik',sans-serif;
+  transition:background 0.15s;
+  letter-spacing:0.3px;
+}
+.intro-besd{
+  position:absolute;top:18px;right:24px;
+  font-family:'Rubik',sans-serif;font-size:13px;font-weight:600;
+  color:var(--ink3);letter-spacing:0.5px;
+}
+
+/* ── SCROLLBAR ── */
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+@media(max-width:720px){
+  .app-layout{flex-direction:column}
+  .sidebar{width:100%;border-left:none;border-bottom:1px solid var(--border)}
+  .map-container{min-height:320px}
+}
+</style>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+</head>
+<body>
+
+<header>
+  <span class="bsd">בס"ד</span>
+  <div class="header-brand">
+    <span class="mag-label">Roadviler</span>
+    <h1>מתכנן מסלול</h1>
+  </div>
+
+</header>
+
+<div id="intro-overlay">
+  <div class="intro-besd">בס"ד</div>
+  <div class="intro-box">
+    <div class="intro-logo">Roadviler · Naira Digital</div>
+    <div class="intro-title">מתכנן מסלול חכם</div>
+    <div class="intro-divider"></div>
+    <div class="intro-desc">האפליקציה מחשבת את המסלול האופטימלי עבורך אוטומטית — חוסכת זמן ודלק</div>
+    <div class="intro-steps">
+      <div class="intro-step">
+        <div class="intro-step-num">1</div>
+        <div class="intro-step-text"><strong>הכנס כתובות</strong> — הוסף את כל עצירות המסלול שלך, בכל סדר שתרצה</div>
+      </div>
+      <div class="intro-step">
+        <div class="intro-step-num">2</div>
+        <div class="intro-step-text"><strong>חשב מסלול אופטימלי</strong> — האלגוריתם ימצא את הסדר הקצר ביותר אוטומטית</div>
+      </div>
+      <div class="intro-step">
+        <div class="intro-step-num">3</div>
+        <div class="intro-step-text"><strong>נווט</strong> — פתח את המסלול ב-Waze, Google Maps, או שתף בWhatsApp</div>
+      </div>
+      <div class="intro-step">
+        <div class="intro-step-num">4</div>
+        <div class="intro-step-text"><strong>גרור לסידור ידני</strong> — ניתן לשנות את סדר הכתובות בגרירה בכל עת</div>
+      </div>
+    </div>
+    <button class="intro-btn" onclick="document.getElementById('intro-overlay').style.display='none'">התחל</button>
+  </div>
+</div>
+
+<div class="app-layout">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+
+    <!-- Addresses -->
+    <div>
+      <div class="section-label">כתובות</div>
+      <div id="address-list"></div>
+      <button class="btn-add" onclick="addRow()">+ הוסף כתובת</button>
+    </div>
+
+    <!-- Actions -->
+    <div>
+      <div class="section-label">פעולות</div>
+      <button class="btn-geo" onclick="sortGeo()">
+        חשב מסלול אופטימלי
+      </button>
+      <div id="status-bar">
+        <div class="spinner"></div>
+        <span id="status-text">מאתר כתובות...</span>
+      </div>
+      <div class="actions">
+        <button class="btn-action" onclick="openWaze()">
+          <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/waze.svg" width="16" height="16" style="filter:invert(40%) sepia(80%) saturate(400%) hue-rotate(170deg);flex-shrink:0" alt="Waze"/>
+          Waze
+        </button>
+        <button class="btn-action" onclick="openGoogle()">
+          <svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#EA4335"/><circle cx="12" cy="9" r="2.5" fill="#fff"/></svg>
+          Google Maps
+        </button>
+      </div>
+      <div class="actions">
+        <button class="btn-action" onclick="shareWhatsapp()">
+          <svg width="16" height="16" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><circle cx="16" cy="16" r="14" fill="#25D366"/><path d="M22.5 19.5c-.3-.2-1.8-.9-2.1-1-.3-.1-.5-.2-.7.2-.2.3-.8 1-1 1.2-.2.2-.4.2-.7.1-.3-.2-1.3-.5-2.5-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.2.2-.3.2-.5 0-.2-.1-.4-.2-.6-.1-.2-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.4s1 2.8 1.2 3c.2.2 2 3 4.8 4.2.7.3 1.2.4 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.8-.7 2-1.4.2-.7.2-1.3.2-1.4 0-.1-.3-.3-.6-.4z" fill="#fff"/></svg>
+          WhatsApp
+        </button>
+        <button class="btn-action" onclick="showManual()">📍 הצג מסלול</button>
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div id="result-section">
+      <div class="section-label">מסלול אופטימלי</div>
+      <div class="summary-box" id="summary-box" style="display:none"></div>
+      <div class="result-list" id="result-list"></div>
+      <button class="btn-clipboard" onclick="copyToClipboard()">📋 העתק לטקסט</button>
+    </div>
+
+  </aside>
+
+  <!-- ── MAP PANEL ── -->
+  <main class="map-panel">
+    <div class="map-header">
+      <div>
+        <div class="map-header-label">מפה חיה</div>
+        <div class="map-header-title">תצוגת מסלול</div>
+      </div>
+    </div>
+    <div class="map-container">
+      <div id="map"></div>
+      <div class="map-placeholder" id="map-placeholder">
+        <div class="map-placeholder-icon">🗺</div>
+        <div class="map-placeholder-text">הכנס כתובות וחשב מסלול כדי לראות את המפה</div>
+      </div>
+    </div>
+  </main>
+
+</div>
+
+<div id="toast"></div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ── MAP SETUP ──
+let map = null;
+let mapMarkers = [];
+let mapPolyline = null;
+
+function initMap(){
+  if(map) return;
+  document.getElementById('map-placeholder').style.display='none';
+  map = L.map('map', {zoomControl:true, attributionControl:true});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'© OpenStreetMap',
+    maxZoom:18
+  }).addTo(map);
+}
+
+function clearMapLayers(){
+  mapMarkers.forEach(m=>map.removeLayer(m));
+  mapMarkers=[];
+  if(mapPolyline){map.removeLayer(mapPolyline);mapPolyline=null;}
+}
+
+function makeIcon(label, type){
+  const colors={start:'#5a8a6a',end:'#9a8870',mid:'#c9b99a'};
+  const bg = colors[type]||colors.mid;
+  return L.divIcon({
+    className:'',
+    html:`<div style="background:${bg};color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:'Rubik',sans-serif;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.18)">${label}</div>`,
+    iconSize:[28,28],
+    iconAnchor:[14,14]
+  });
+}
+
+function drawMap(pts, addresses){
+  initMap();
+  clearMapLayers();
+  if(!pts.length) return;
+
+  const latlngs = pts.map(p=>[p.lat,p.lng]);
+
+  // Polyline
+  mapPolyline = L.polyline(latlngs,{
+    color:'#c9b99a',weight:3,opacity:0.85,dashArray:'6,6'
+  }).addTo(map);
+
+  // Markers
+  pts.forEach((p,i)=>{
+    const isStart=i===0,isEnd=i===pts.length-1;
+    const type=isStart?'start':isEnd?'end':'mid';
+    const marker=L.marker([p.lat,p.lng],{icon:makeIcon(i+1,type)})
+      .bindPopup(`<b>${i+1}.</b> ${addresses[i]}`,{maxWidth:220,className:'map-popup'})
+      .addTo(map);
+    mapMarkers.push(marker);
+  });
+
+  map.fitBounds(mapPolyline.getBounds(),{padding:[36,36]});
+}
+
+// ── DRAG & DROP ──
+let dragSrc=null;
+
+function addRow(value=''){
+  const list=document.getElementById('address-list');
+  const idx=list.children.length;
+  const row=document.createElement('div');
+  row.className='address-row';
+  row.draggable=true;
+  row.innerHTML=`<span class="drag-handle">⠿</span><span class="row-num">${idx+1}</span><input class="address-input" type="text" placeholder="הכנס כתובת..." value="${value}"/><button class="btn-remove" onclick="removeRow(this)">✕</button>`;
+  row.addEventListener('dragstart',e=>{dragSrc=row;setTimeout(()=>row.classList.add('dragging'),0);e.dataTransfer.effectAllowed='move'});
+  row.addEventListener('dragend',()=>{row.classList.remove('dragging');document.querySelectorAll('.address-row').forEach(r=>r.classList.remove('drag-over'));renum()});
+  row.addEventListener('dragover',e=>{e.preventDefault();if(row!==dragSrc){document.querySelectorAll('.address-row').forEach(r=>r.classList.remove('drag-over'));row.classList.add('drag-over')}});
+  row.addEventListener('drop',e=>{e.preventDefault();if(dragSrc&&dragSrc!==row){const all=[...list.children];const si=all.indexOf(dragSrc);const ti=all.indexOf(row);if(si<ti)row.after(dragSrc);else row.before(dragSrc);}row.classList.remove('drag-over')});
+  list.appendChild(row);renum();
+  if(!value)row.querySelector('.address-input').focus();
+}
+
+function removeRow(btn){btn.closest('.address-row').remove();renum()}
+function renum(){document.querySelectorAll('.address-row .row-num').forEach((el,i)=>el.textContent=i+1)}
+function getAddresses(){return[...document.querySelectorAll('.address-input')].map(i=>i.value.trim()).filter(Boolean)}
+
+function setStatus(msg,show){
+  const bar=document.getElementById('status-bar');
+  document.getElementById('status-text').textContent=msg;
+  bar.classList.toggle('visible',show);
+}
+
+// ── GEOCODING ──
+async function geocode(addr){
+  const q=encodeURIComponent(addr+', ישראל');
+  const res=await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`,{headers:{'Accept-Language':'he','User-Agent':'RoutePlannerApp/1.0'}});
+  const data=await res.json();
+  if(!data.length)return null;
+  return{lat:parseFloat(data[0].lat),lng:parseFloat(data[0].lon)};
+}
+
+// ── ALGORITHM ──
+function haversine(a,b){
+  const R=6371,toR=Math.PI/180;
+  const dLat=(b.lat-a.lat)*toR,dLng=(b.lng-a.lng)*toR;
+  const x=Math.sin(dLat/2)**2+Math.cos(a.lat*toR)*Math.cos(b.lat*toR)*Math.sin(dLng/2)**2;
+  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+}
+function routeLength(order,pts){
+  let d=0;for(let i=0;i<order.length-1;i++)d+=haversine(pts[order[i]],pts[order[i+1]]);return d;
+}
+function nearestNeighborFrom(startIdx,pts){
+  const order=[startIdx];const used=new Set([startIdx]);
+  while(order.length<pts.length){
+    const cur=pts[order[order.length-1]];let best=-1,bestD=Infinity;
+    for(let i=0;i<pts.length;i++){if(!used.has(i)){const d=haversine(cur,pts[i]);if(d<bestD){bestD=d;best=i}}}
+    order.push(best);used.add(best);
+  }
+  return order;
+}
+function twoOpt(order,pts){
+  let improved=true;let best=[...order];
+  while(improved){improved=false;
+    for(let i=0;i<best.length-1;i++){for(let j=i+2;j<best.length;j++){
+      if(i===0&&j===best.length-1)continue;
+      const a=pts[best[i]],b=pts[best[i+1]],c=pts[best[j]],d=pts[best[(j+1)%best.length]];
+      if(haversine(a,c)+haversine(b,d)<haversine(a,b)+haversine(c,d)-0.001){
+        const seg=best.slice(i+1,j+1).reverse();
+        best=[...best.slice(0,i+1),...seg,...best.slice(j+1)];improved=true;
+      }
+    }}
+  }
+  return best;
+}
+function bestRoute(pts){
+  let bestOrder=null,bestDist=Infinity;
+  for(let s=0;s<pts.length;s++){
+    const nn=nearestNeighborFrom(s,pts);
+    const optimized=twoOpt(nn,pts);
+    const d=routeLength(optimized,pts);
+    if(d<bestDist){bestDist=d;bestOrder=optimized}
+  }
+  return{order:bestOrder,totalKm:bestDist};
+}
+
+// ── MAIN SORT ──
+async function sortGeo(){
+  const addrs=getAddresses();
+  if(addrs.length<2){showToast('הכנס לפחות שתי כתובות');return}
+  const geoBtn=document.querySelector('.btn-geo');
+  geoBtn.disabled=true;
+  setStatus(`מאתר כתובות... (0/${addrs.length})`,true);
+  const pts=[];
+  for(let i=0;i<addrs.length;i++){
+    setStatus(`מאתר כתובות... (${i+1}/${addrs.length})`,true);
+    const p=await geocode(addrs[i]);
+    if(!p){
+      setStatus('',false);geoBtn.disabled=false;
+      showToast(`לא נמצאה כתובת: "${addrs[i]}"`);return;
+    }
+    pts.push({...p,original:addrs[i]});
+    if(i<addrs.length-1)await new Promise(r=>setTimeout(r,1150));
+  }
+  setStatus('מחשב מסלול...',true);
+  const{order,totalKm}=bestRoute(pts);
+  const sortedPts=order.map(i=>pts[i]);
+  const sorted=sortedPts.map(p=>p.original);
+  const list=document.getElementById('address-list');
+  list.innerHTML='';
+  sorted.forEach(v=>addRow(v));
+  setStatus('',false);
+  geoBtn.disabled=false;
+  showResult(sorted,totalKm);
+  drawMap(sortedPts,sorted);
+  showToast('מסלול אופטימלי חושב ✓');
+}
+
+// ── SHOW RESULT ──
+function showResult(addrs,totalKm){
+  const sec=document.getElementById('result-section');
+  const list=document.getElementById('result-list');
+  const sumBox=document.getElementById('summary-box');
+  sec.style.display='block';
+  list.innerHTML='';
+  if(totalKm!=null){
+    sumBox.style.display='block';
+    sumBox.innerHTML=`<strong>התחלה:</strong> ${addrs[0]}<br><strong>סיום:</strong> ${addrs[addrs.length-1]}<br><strong>מרחק:</strong> ~${Math.round(totalKm)} ק"מ &nbsp;·&nbsp; <strong>עצירות:</strong> ${addrs.length}`;
+  } else {sumBox.style.display='none'}
+  addrs.forEach((addr,i)=>{
+    if(i>0){const c=document.createElement('div');c.className='connector-line';list.appendChild(c)}
+    const isStart=i===0,isEnd=i===addrs.length-1;
+    const numClass=isStart?'num-start':isEnd?'num-end':'num-mid';
+    const subLabel=isStart?'<div class="result-sub badge-start">נקודת התחלה</div>':isEnd?'<div class="result-sub badge-end">יעד סיום</div>':'';
+    const item=document.createElement('div');item.className='result-item';
+    item.innerHTML=`<span class="result-num ${numClass}">${i+1}</span><div><div class="result-text">${addr}</div>${subLabel}</div>`;
+    list.appendChild(item);
+  });
+}
+
+function showManual(){
+  const a=getAddresses();
+  if(!a.length){showToast('אין כתובות');return}
+  showResult(a,null);
+  // Show map with geocoded pts on manual view too
+  (async()=>{
+    const pts=[];
+    for(const addr of a){
+      const p=await geocode(addr);
+      if(p)pts.push({...p,original:addr});
+    }
+    if(pts.length>0)drawMap(pts,pts.map(p=>p.original));
+  })();
+}
+
+// ── NAVIGATION ──
+function buildMapsUrl(a){
+  if(a.length===1)return`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(a[0]+', ישראל')}`;
+  const o=encodeURIComponent(a[0]+', ישראל');
+  const d=encodeURIComponent(a[a.length-1]+', ישראל');
+  const w=a.slice(1,-1).map(x=>encodeURIComponent(x+', ישראל')).join('|');
+  let url=`https://www.google.com/maps/dir/?api=1&origin=${o}&destination=${d}&travelmode=driving`;
+  if(w)url+=`&waypoints=${w}`;
+  return url;
+}
+function openWaze(){const a=getAddresses();if(!a.length){showToast('הכנס לפחות כתובת אחת');return}if(a.length===1)window.open(`https://waze.com/ul?q=${encodeURIComponent(a[0]+', ישראל')}&navigate=yes`,'_blank');else{openGoogle();showToast('וויז לא תומך ברב-עצירות — נפתח ב-Google Maps')}}
+function openGoogle(){const a=getAddresses();if(!a.length){showToast('הכנס לפחות כתובת אחת');return}showResult(a,null);window.open(buildMapsUrl(a),'_blank')}
+function shareWhatsapp(){const a=getAddresses();if(!a.length){showToast('הכנס לפחות כתובת אחת');return}const msg=`🗺️ *מסלול נסיעה*\n\n${a.map((x,i)=>`${i+1}. ${x}`).join('\n')}\n\n📍 פתח במפה:\n${buildMapsUrl(a)}`;window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');showResult(a,null)}
+function copyToClipboard(){const a=getAddresses();if(!a.length)return;navigator.clipboard.writeText(a.map((x,i)=>`${i+1}. ${x}`).join('\n')).then(()=>showToast('הועתק ✓'))}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800)}
+
+// Init
+addRow();addRow();addRow();
+</script>
+</body>
+</html>
